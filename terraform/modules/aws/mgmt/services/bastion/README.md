@@ -7,7 +7,7 @@
   - No default value provided
 - __tags__
   - Type: Map
-  - Defaults to "Upwork Bastion"
+  - Defaults to "Bastion"
 - __instance_type__
   - Defaults to t2.micro instance size
 - __key_name__

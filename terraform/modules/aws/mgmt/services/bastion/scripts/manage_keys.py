@@ -8,13 +8,20 @@ import boto3
 import argparse
 import json
 
+from botocore.client import BaseClient
+from botocore.exceptions import ClientError
+
 
 async def check_for_keys():
-    key_pair = ec2.describe_key_pairs(
-        KeyNames=[
-            keypair_name
-        ]
-    )
+    try:
+        ec2.describe_key_pairs(
+            KeyNames=[
+                keypair_name
+            ]
+        )
+        return True
+    except ClientError:
+        return False
 
     private_key = ssm.get_parameter(Name=secret_location)["Parameter"]["Value"]
 
@@ -45,23 +52,29 @@ def get():
     loop.close()
 
     if key_found:
-        print("Key Pair %s found!", keypair_name)
+        print(f"Key Pair {keypair_name} found!")
         key = ec2.describe_key_pairs(KeyNames=[
             keypair_name
         ])
-        key_fingerprint = key['KeyPairs']['KeyFingerprint']
-        secret_response = ssm.get_parameter(Name=secret_location, WithDecryption=True)
-        key_material = secret_response['Parameters']['Value']
-        return json.dump({"KeyMaterial": key_material, "KeyName": keypair_name, "KeyFingerprint": key_fingerprint})
-    else:
-        print("Key Pair %s was not found, creating it", keypair_name)
-        key = ec2.KeyPair.create_key_pair(KeyName=keypair_name)
 
-        ssm.put_parameter(
+        key_fingerprint = key["KeyPairs"][0]["KeyFingerprint"]
+
+        secret_response = ssm.get_parameter(Name=secret_location, WithDecryption=True)
+        key_material = secret_response['Parameter']['Value']
+        key_dict = dict(KeyMaterial=key_material, KeyName=keypair_name, KeyFingerprint=key_fingerprint)
+        
+        return json.JSONEncoder.encode(key_dict)
+    else:
+        print("Key Pair %s was not found, creating it".format(keypair_name))
+        key = ec2.create_key_pair(KeyName=keypair_name)
+        print(key)
+
+        response = ssm.put_parameter(
             Name=secret_location,
             Type="SecureString",
             Value=key["KeyMaterial"]
         )
+        print(response)
 
         return key
 
@@ -122,7 +135,7 @@ def agent():
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("action", help="The action that you'd like to perform (get, delete, agent")
+parser.add_argument("action", help="The action that you'd like to perform (get, delete, agent)")
 parser.add_argument("project_name", help="The project that this is running for")
 parser.add_argument("keypair_name", help="The Key Pair to get or create in KMS")
 parser.add_argument("environment_name", help="The environment which you're creating/searching the KMS key for")
@@ -133,6 +146,11 @@ environment_name = args.environment_name
 keypair_name = args.keypair_name
 project_name = args.project_name
 
+secret_location = "/{environment_name!s}/{project_name!s}/bastion/sshKey".format(**locals())
+
+ec2: BaseClient = boto3.client("ec2")
+ssm = boto3.client("ssm")
+
 if args.action.lower() == "get":
     get()
 elif args.action.lower() == "agent":
@@ -141,8 +159,3 @@ elif args.action.lower() == "delete":
     delete()
 else:
     sys.exit("Invalid action selected!")
-
-secret_location = "/{environment_name!s}/{project_name!s}/bastion/sshKey".format(**locals())
-
-ec2 = boto3.resource("ec2")
-ssm = boto3.resource("ssm")
