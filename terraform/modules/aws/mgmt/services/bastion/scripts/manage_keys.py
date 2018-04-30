@@ -14,26 +14,27 @@ from botocore.exceptions import ClientError
 
 async def check_for_keys():
     try:
-        ec2.describe_key_pairs(
+        key_pair = ec2.describe_key_pairs(
             KeyNames=[
                 keypair_name
             ]
         )
-        return True
-    except ClientError:
-        return False
 
-    private_key = ssm.get_parameter(Name=secret_location)["Parameter"]["Value"]
+        private_key = ssm.get_parameter(Name=secret_location)["Parameter"]["Value"]
 
-    if key_pair["KeyPairs"]["KeyFingerprint"]:
-        if private_key:
-            return True
+        if key_pair["KeyPairs"]["KeyFingerprint"]:
+            if private_key:
+                return True
+            else:
+                print("No private key exists for key with name %s, deleting abandoned key", keypair_name)
+                response = ec2.delete_key_pair(KeyName=keypair_name)
+                print(response)
+                return False
         else:
-            print("No private key exists for key with name %s, deleting abandoned key", keypair_name)
-            response = ec2.delete_key_pair(KeyName=keypair_name)
-            print(response)
             return False
-    else:
+
+    except ClientError:
+        print(f"The key requested named:\t{keypair_name} does not exist!")
         return False
 
 
@@ -62,7 +63,7 @@ def get():
         secret_response = ssm.get_parameter(Name=secret_location, WithDecryption=True)
         key_material = secret_response['Parameter']['Value']
         key_dict = dict(KeyMaterial=key_material, KeyName=keypair_name, KeyFingerprint=key_fingerprint)
-        
+
         return json.JSONEncoder.encode(key_dict)
     else:
         print("Key Pair %s was not found, creating it".format(keypair_name))
