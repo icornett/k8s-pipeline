@@ -5,14 +5,14 @@ data "aws_vpc" "selected" {
 data "aws_availability_zones" "all" {}
 
 data "aws_ssm_parameter" "privatekey" {
-  name       = "/${var.environmentName}/${var.project_name}/bastion/sshkey"
+  name       = "/${var.environment_name}/${var.project_name}/bastion/sshkey"
   depends_on = ["null_resource.keygen"]
 }
 
 # Create BE Security Groups and rules
 resource "aws_security_group" "natsg" {
-  name        = "${var.project_name} NATSG ${var.environmentName}"
-  description = "${var.project_name} NAT ${var.environmentName}"
+  name        = "${var.project_name} NATSG ${var.environment_name}"
+  description = "${var.project_name} NAT ${var.environment_name}"
   vpc_id      = "${var.vpc_id}"
 
   tags = "${var.tags}"
@@ -54,7 +54,7 @@ resource "aws_route_table" "natrt" {
   vpc_id = "${var.vpc_id}"
 
   tags {
-    Name = "${var.project_name}-natTable-${var.environmentName}"
+    Name = "${var.project_name}-natTable-${var.environment_name}"
   }
 }
 
@@ -75,21 +75,21 @@ resource "aws_route" "nat-out" {
 # Create Bastion host secrets
 resource "null_resource" "keygen" {
   provisioner "local-exec" {
-    command     = "${path.module}/scripts/manage_keys.py get ${var.project_name} ${var.key_name} ${var.environmentName}"
+    command     = "${path.module}/scripts/manage_keys.py get ${var.project_name} ${var.key_name} ${var.environment_name}"
     interpreter = ["/usr/bin/python3"]
     when        = "create"
     on_failure  = "continue"
   }
 
   provisioner "local-exec" {
-    command     = "${path.module}/scripts/manage_keys.py agent ${var.project_name} ${var.key_name} ${var.environmentName}"
+    command     = "${path.module}/scripts/manage_keys.py agent ${var.project_name} ${var.key_name} ${var.environment_name}"
     interpreter = ["/usr/bin/python3"]
     when        = "create"
     on_failure  = "fail"
   }
 
   provisioner "local-exec" {
-    command     = "${path.module}/scripts/manage_keys.py delete ${var.project_name} ${var.key_name} ${var.environmentName}"
+    command     = "${path.module}/scripts/manage_keys.py delete ${var.project_name} ${var.key_name} ${var.environment_name}"
     interpreter = ["/usr/bin/python3"]
     when        = "destroy"
     on_failure  = "continue"

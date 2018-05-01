@@ -1,5 +1,6 @@
-variable "environmentName" {
+variable "environment_name" {
   description = "the name of the environment being deployed"
+  default     = "dev"
 }
 
 variable "tags" {
@@ -29,9 +30,9 @@ variable "volume_size" {
 variable "aws_image" {
   description = "The AMI image to deploy for the bastion host"
   type        = "string"
-  default     = "ami-38469440"
+  default     = "ami-35d6664d"
 
-  # ami-38469440 is 11/20/2017 Amazon Linux NAT image
+  # ami-35d6664d is 01/17/2017 Amazon Linux NAT image
 }
 
 variable "vpc_id" {
