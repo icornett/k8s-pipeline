@@ -110,22 +110,22 @@ def agent():
     loop.close()
 
     if key_exists:
-        key_location = "{keypair_name!s}.pem".format(keypair_name)
+        key_location = f"{keypair_name}.pem"
         if os.path.exists(key_location):
             key_file_permissions = oct(os.stat(key_location)[ST_MODE])[-3:]
 
-            if key_file_permissions == '600':
+            if key_file_permissions == '400':
                 add_to_agent(key_location)
             else:
-                # Set Permissions to 600
-                os.chmod(key_location, 600)
+                # Set Permissions to 400
+                os.chmod(key_location, 400)
                 add_to_agent(key_location)
         else:
             key_contents = ssm.get_parameter(Name=secret_location)
             key_file = open(key_location, "w+")
             key_file.write(key_contents)
             key_file.close()
-            os.chmod(key_location, 600)
+            os.chmod(key_location, 400)
             add_to_agent(key_location)
     else:
         print("Key pair %s does not exist!", keypair_name)
