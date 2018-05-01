@@ -64,9 +64,9 @@ def get():
         key_material = secret_response['Parameter']['Value']
         key_dict = dict(KeyMaterial=key_material, KeyName=keypair_name, KeyFingerprint=key_fingerprint)
 
-        return json.JSONEncoder.encode(key_dict)
+        return json.dumps(key_dict)
     else:
-        print("Key Pair %s was not found, creating it".format(keypair_name))
+        print(f"Key Pair {keypair_name} was not found, creating it")
         key = ec2.create_key_pair(KeyName=keypair_name)
         print(key)
 
