@@ -74,13 +74,15 @@ resource "aws_route" "nat-out" {
 
 # Create Bastion host secrets
 resource "null_resource" "keygen" {
+  # Return or create SSH keys
   provisioner "local-exec" {
     command     = "${path.module}/scripts/manage_keys.py get ${var.project_name} ${var.key_name} ${var.environment_name}"
     interpreter = ["/usr/bin/python3"]
     when        = "create"
-    on_failure  = "continue"
+    on_failure  = "fail"
   }
 
+  # Setup SSH Agent for connecting to bastion host
   provisioner "local-exec" {
     command     = "${path.module}/scripts/manage_keys.py agent ${var.project_name} ${var.key_name} ${var.environment_name}"
     interpreter = ["/usr/bin/python3"]
@@ -88,11 +90,12 @@ resource "null_resource" "keygen" {
     on_failure  = "fail"
   }
 
+  # Delete KMS key and any associated private key
   provisioner "local-exec" {
     command     = "${path.module}/scripts/manage_keys.py delete ${var.project_name} ${var.key_name} ${var.environment_name}"
     interpreter = ["/usr/bin/python3"]
     when        = "destroy"
-    on_failure  = "continue"
+    on_failure  = "fail"
   }
 }
 
