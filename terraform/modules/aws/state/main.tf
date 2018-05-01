@@ -1,5 +1,5 @@
 resource "aws_dynamodb_table" "state-lock-table" {
-  name           = "${var.project_name}-lock"
+  name           = "${var.project_name}-${var.environment_name}-lock"
   read_capacity  = 20
   write_capacity = 20
   hash_key       = "LockID"
@@ -11,7 +11,7 @@ resource "aws_dynamodb_table" "state-lock-table" {
 }
 
 resource "aws_s3_bucket" "state-storage" {
-  bucket = "${var.project_name}-${var.environment_name}-state"
+  bucket = "${var.project_name}-state"
 
   versioning {
     enabled = true
