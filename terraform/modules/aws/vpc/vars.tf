@@ -4,7 +4,13 @@ variable "project_name" {
 }
 
 variable "environment_name" {
-  default     = "prod"
+  default     = "dev"
   type        = "string"
   description = "Environment being deployed"
+}
+
+variable "cidr_block" {
+  default = "10.0.0.0/16"
+  type = "string"
+  description = "VPC base CIDR block"
 }

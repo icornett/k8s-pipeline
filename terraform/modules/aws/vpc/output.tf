@@ -6,22 +6,26 @@ output "vpc_cidr_block" {
   value = "${data.aws_vpc.selected.cidr_block}"
 }
 
+output "vpc_ipv6_cidr_block" {
+  value = "${data.aws_vpc.selected.ipv6_cidr_block}"
+}
+
 output "route_table" {
   value = "${aws_vpc.vpc.default_route_table_id}"
 }
 
-output "fe_subnet" {
-  value = ["${aws_subnet.subnet.*.id}"]
+output "public_ip" {
+  value = "${data.aws_eip.public.public_ip}"
 }
 
-output "fe_security_group" {
-  value = "${aws_security_group.frontend.id}"
+output "public_subnet" {
+  value = ["${aws_subnet.public.*.id}"]
 }
 
-output "fe_cidr_blocks" {
-  value = ["${aws_subnet.subnet.*.cidr_block}"]
+output "public_sg" {
+  value = "${aws_security_group.public_sg.id}"
 }
 
-output "be_subnet" {
-  value = ["${aws_subnet.be_subnet.*.id}"]
+output "inet_gw" {
+  value = "${aws_internet_gateway.inet_gw.id}"
 }
