@@ -104,4 +104,4 @@ requests-oauthlib==0.8.0
 rsa==3.4.2
 s3transfer==0.1.13
 six==1.11.0
-urllib3==1.22
+urllib3==1.24.2
